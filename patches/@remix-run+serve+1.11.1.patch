@@ -1,0 +1,74 @@
+diff --git a/node_modules/@remix-run/serve/dist/index.js b/node_modules/@remix-run/serve/dist/index.js
+index f2a3dff..e0a4144 100644
+--- a/node_modules/@remix-run/serve/dist/index.js
++++ b/node_modules/@remix-run/serve/dist/index.js
+@@ -16,6 +16,7 @@ var express = require('express');
+ var compression = require('compression');
+ var morgan = require('morgan');
+ var express$1 = require('@remix-run/express');
++var fs = require('fs');
+ 
+ function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
+ 
+@@ -39,6 +40,15 @@ function createApp(buildPath, mode = "production", publicPath = "/build/", asset
+     build: require(buildPath),
+     mode
+   }) : (req, res, next) => {
++    // check if there was a build error and show it if present
++    if (fs.existsSync(`.cache/build-error.log`)) {
++      let buildError = fs.readFileSync(`.cache/build-error.log`, "utf-8");
++      let html = `<html><head><title>Build Error</title></head>
++      <body style="color:red;"><pre>${buildError}</pre>${liveReloadScript}</body></html>`
++      res.status(500).send(html);
++      return;
++    }
++
+     // require cache is purged in @remix-run/dev where the file watcher is
+     let build = require(buildPath);
+     return express$1.createRequestHandler({
+@@ -50,3 +60,44 @@ function createApp(buildPath, mode = "production", publicPath = "/build/", asset
+ }
+ 
+ exports.createApp = createApp;
++
++let liveReloadScript = `<script>
++function remixLiveReloadConnect(config) {
++  let protocol = location.protocol === "https:" ? "wss:" : "ws:";
++  let host = location.hostname;
++  let socketPath = protocol + "//" + host + ":" + ${process.env.REMIX_DEV_SERVER_WS_PORT || 8002} + "/socket";
++  let ws = new WebSocket(socketPath);
++  ws.onmessage = (message) => {
++    let event = JSON.parse(message.data);
++    if (event.type === "LOG") {
++      console.log(event.message);
++    }
++    if (event.type === "RELOAD") {
++      console.log("💿 Reloading window ...");
++      window.location.reload();
++    }
++  };
++  ws.onopen = () => {
++    if (config && typeof config.onOpen === "function") {
++      config.onOpen();
++    }
++  };
++  ws.onclose = (event) => {
++    if (event.code === 1006) {
++      console.log("Remix dev asset server web socket closed. Reconnecting...");
++      setTimeout(
++        () =>
++          remixLiveReloadConnect({
++            onOpen: () => window.location.reload(),
++          }),
++        1000
++      );
++    }
++  };
++  ws.onerror = (error) => {
++    console.log("Remix dev asset server web socket error:");
++    console.error(error);
++  };
++}
++remixLiveReloadConnect();
++</script>`
+\ No newline at end of file

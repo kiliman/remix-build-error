@@ -1,0 +1,47 @@
+diff --git a/node_modules/@remix-run/dev/dist/compiler/compilerServer.js b/node_modules/@remix-run/dev/dist/compiler/compilerServer.js
+index fa6bd05..aec38e7 100644
+--- a/node_modules/@remix-run/dev/dist/compiler/compilerServer.js
++++ b/node_modules/@remix-run/dev/dist/compiler/compilerServer.js
+@@ -29,6 +29,7 @@ var serverBareModulesPlugin = require('./plugins/serverBareModulesPlugin.js');
+ var serverEntryModulePlugin = require('./plugins/serverEntryModulePlugin.js');
+ var serverRouteModulesPlugin = require('./plugins/serverRouteModulesPlugin.js');
+ var urlImportsPlugin = require('./plugins/urlImportsPlugin.js');
++var fs = require('fs');
+ 
+ function _interopNamespace(e) {
+   if (e && e.__esModule) return e;
+@@ -133,6 +134,12 @@ const createEsbuildConfig = (config, assetsManifestChannel, options) => {
+   };
+ };
+ async function writeServerBuildResult(config, outputFiles) {
++  // successful build, so delete the build error file so that we don't show
++  // the error from the previous build
++  if (fs.existsSync(`.cache/build-error.log`)) {
++    fs.unlinkSync(`.cache/build-error.log`);
++  }
++
+   await fse__namespace.ensureDir(path__namespace.dirname(config.serverBuildPath));
+   for (let file of outputFiles) {
+     if (file.path.endsWith(".js")) {
+diff --git a/node_modules/@remix-run/dev/dist/compiler/onCompileFailure.js b/node_modules/@remix-run/dev/dist/compiler/onCompileFailure.js
+index 1e3fa59..d7ec5e7 100644
+--- a/node_modules/@remix-run/dev/dist/compiler/onCompileFailure.js
++++ b/node_modules/@remix-run/dev/dist/compiler/onCompileFailure.js
+@@ -13,6 +13,7 @@
+ Object.defineProperty(exports, '__esModule', { value: true });
+ 
+ var esbuild = require('esbuild');
++var fs = require('fs');
+ 
+ function _interopNamespace(e) {
+   if (e && e.__esModule) return e;
+@@ -49,6 +50,9 @@ const logCompileFailure = failure => {
+         color: true
+       });
+       console.error(...messages);
++      // write build error to file so that we can show it in the browser
++      let buildError = failure.errors.map(error => error.text).join("\n");
++      fs.writeFileSync(`.cache/build-error.log`, buildError);
+     }
+   }
+   console.error((failure === null || failure === void 0 ? void 0 : failure.message) || "An unknown build error occurred");
