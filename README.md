@@ -21,7 +21,11 @@ build.
 If the build is successful, it will remove the `build-error.log` file and Remix will send
 the actual route response.
 
-<div style="position: relative; padding-bottom: 54.77308294209703%; height: 0;"><iframe src="https://www.loom.com/embed/39c6bd8ad3a94e2bbb9888b158f35c27" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe></div>
+<img style="max-width:300px;" src="https://cdn.loom.com/sessions/thumbnails/39c6bd8ad3a94e2bbb9888b158f35c27-with-play.gif">
+
+<a href="https://www.loom.com/share/39c6bd8ad3a94e2bbb9888b158f35c27">
+    Show Remix build errors with support for LiveReload - Watch Video
+  </a>
 
 ## Adding to your project
 
